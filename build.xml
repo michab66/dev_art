@@ -1,0 +1,107 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<!-- $Id: build.xml 675 2013-06-05 21:13:11Z Michael $ -->
+
+<!-- Place comments and descriptions into the description attributes that are
+     available with most of the tags.  This makes this information available
+     to tools and scripts.
+  -->
+
+<project name="computerArt" default="dist" basedir=".">
+
+  <property
+    description = 
+      "Allow properties defined in a file to override the settings here."
+    file="build.properties"/>
+
+  <property
+	description="Commons home."
+	name="common.home"
+	value="${basedir}/../dev_common" />
+
+  <property
+    description="The startup class for the executable jar." 
+    name="mainclass"
+    value="de.michab.apps.art.ComputerArt"/>
+
+  <import file="${common.home}/common_ant.xml"/>
+
+  <fileset dir="${in.lib}" id="fs.libraries.id">
+    <include name="${dev_common}"/>
+  	<include name="${common_lib.swingx}"/>
+  </fileset>
+
+
+  <path description="Defines the project's classpath." 
+        id="pt.libraries.id">
+    <fileset refid="fs.libraries.id"/>
+  </path>
+
+
+  <target description="Creates the common lib."
+          name="commons" 
+          depends="prepare">
+    <ant inheritall="false" antfile="${common.home}/build.xml">
+    	  <property name="out.dist" value="${in.lib}"/>
+    </ant>
+  </target>
+
+
+  <target description="Compiles the sources."
+          name="class"
+          depends="commons">
+    <javac srcdir="${in.src}"
+           destdir="${out.bin}"
+           classpathref="pt.libraries.id"
+           deprecation="true"/>
+  </target>
+
+
+
+  <target description="Copies resource files into the build area." 
+          name="resource" 
+          depends="class">
+    <copy todir="${out.bin}">
+      <fileset dir="${in.src}"
+               excludes="doc/**"
+               includes="**/*.properties,**/*.gif,**/*.png,**/*.jpg"/>
+    </copy>
+  </target>
+
+
+
+  <target name="jdoc" depends="class"
+          description="Generates the javadocs into the web area.">
+    <!-- Create the jdoc directory -->
+    <mkdir dir="${out.web}/javadoc"/>
+    <javadoc packagenames="de.michab.*"
+             sourcepath="${in.src}"
+             destdir="${out.web}/javadoc"
+             classpathref="pt.libraries.id"
+             use="true"/>
+  </target>
+
+
+
+  <target description="Creates the core executable jar."
+          name="dist" depends="jar">
+
+<!--  <copy file="${in.src}/de/michab/apps/mp3tagger/resources/id3v2.png"
+        todir="${out.dist}"/> -->
+    <common-one-jar
+    	destfile="${out.dist}/${ant.project.name}-${DSTAMP}.jar">
+       <!-- Note that the auto-generated manifest is cool. -->
+
+        <main jar="${out.dist}/${ant.project.name}.jar"/>
+<!--        <manifest>
+          <attribute name="SplashScreen-Image" value="id3v2.png"/>
+        </manifest> -->
+        <lib>
+            <fileset refid="fs.libraries.id"/>
+        </lib>
+<!--        <fileset dir="${out.dist}">
+           <include name="id3v2.png"/>
+        </fileset> -->
+    </common-one-jar>
+  </target>
+</project>
